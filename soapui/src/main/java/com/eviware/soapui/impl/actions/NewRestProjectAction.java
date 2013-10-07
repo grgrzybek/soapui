@@ -48,7 +48,7 @@ public class NewRestProjectAction extends AbstractSoapUIAction<WorkspaceImpl>
 	public static final String SOAPUI_ACTION_ID = "NewRestProjectAction";
 
 	private static final Logger logger = Logger.getLogger( NewRestProjectAction.class );
-	private static final String DEFAULT_PROJECT_NAME = "REST Project"; //TODO: configurable or some other intelligent way
+	protected static final String DEFAULT_PROJECT_NAME = "REST Project"; //TODO: configurable or some other intelligent way
 	private static final String EXAMPLE_URI = "http://example.com/resource/path/search?parameter=value";
 	private static final MessageSupport messages = MessageSupport.getMessages( NewRestProjectAction.class );
 	private static final String URI_LABEL = messages.get( "Form.URI.Label" );

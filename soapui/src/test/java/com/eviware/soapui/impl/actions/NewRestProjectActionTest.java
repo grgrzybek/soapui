@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.eviware.soapui.impl.actions.NewRESTProjectAction.DEFAULT_PROJECT_NAME;
+import static com.eviware.soapui.impl.actions.NewRestProjectAction.DEFAULT_PROJECT_NAME;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -24,16 +24,16 @@ import static org.mockito.Mockito.when;
  * Time: 11:01
  * To change this template use File | Settings | File Templates.
  */
-public class NewRESTProjectActionTest
+public class NewRestProjectActionTest
 {
 	private Workspace workspace;
-	private NewRESTProjectAction newRESTProjectAction;
+	private NewRestProjectAction newRESTProjectAction;
 
 	@Before
 	public void setUp() throws IOException, XmlException
 	{
 		workspace = mock( Workspace.class );
-		newRESTProjectAction = new NewRESTProjectAction();
+		newRESTProjectAction = new NewRestProjectAction();
 	}
 
 	@Test
