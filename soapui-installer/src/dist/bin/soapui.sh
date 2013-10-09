@@ -33,11 +33,11 @@ SOAPUI_CLASSPATH=$SOAPUI_HOME/bin/${project.src.artifactId}-${project.version}.j
 
 export SOAPUI_CLASSPATH
 
-JAVA_OPTS="-Xms128m -Xmx1024m -Dsoapui.properties=soapui.properties -Dsoapui.home=$SOAPUI_HOME -Dfile.encoding=UTF8"
+JAVA_OPTS="-Xms128m -Xmx1024m -Dsoapui.properties=soapui.properties -Dsoapui.home=$SOAPUI_HOME -Dfile.encoding=UTF8 -splash:soapui-splash.png"
 
 if $darwin
 then
-    JAVA_OPTS="$JAVA_OPTS -Dapple.awt.graphics.UseQuartz=true; -Dswing.crossplatformlaf=apple.laf.AquaLookAndFeel"
+    JAVA_OPTS="$JAVA_OPTS -Dswing.crossplatformlaf=apple.laf.AquaLookAndFeel"
 fi
 
 if [ $SOAPUI_HOME != "" ] 
