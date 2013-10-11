@@ -18,32 +18,29 @@ import com.eviware.soapui.impl.rest.actions.request.AddRestRequestToTestCaseActi
 import com.eviware.soapui.impl.rest.support.RestUtils;
 import com.eviware.soapui.impl.wsdl.support.HelpUrls;
 import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequestInterface;
-import com.eviware.soapui.support.DocumentListenerAdapter;
 import com.eviware.soapui.support.UISupport;
 import com.eviware.soapui.support.action.swing.SwingActionDelegate;
 import com.eviware.soapui.support.components.JXToolBar;
 
 import javax.swing.*;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.List;
 
 public class RestRequestDesktopPanel extends
 		AbstractRestRequestDesktopPanel<RestRequestInterface, RestRequestInterface>
 {
-	private JButton addToTestCaseButton;
+	private final ResourceChangeListener resourceChangeListener;
 	protected TextPanelWithTopLabel resourcePanel;
 	protected TextPanelWithTopLabel queryPanel;
-	private final ResourceChangeListener resourceChangeListener;
+	private JButton addToTestCaseButton;
 
 	public RestRequestDesktopPanel( RestRequestInterface modelItem )
 	{
@@ -56,12 +53,14 @@ public class RestRequestDesktopPanel extends
 	protected void initializeFields()
 	{
 		String path = getRequest().getResource().getFullPath();
-		resourcePanel = new TextPanelWithTopLabel( "Resource", path, new DocumentListenerAdapter()
+		resourcePanel = new TextPanelWithTopLabel( "Resource", path );
+		resourcePanel.textField.addMouseListener( new MouseAdapter()
 		{
+
 			@Override
-			public void update( Document document )
+			public void mouseClicked( MouseEvent e )
 			{
-				//getRequest().getResource().setPath( resourcePanel.getText() );
+				showdialog( getRequest().getResource() );
 			}
 		} );
 
@@ -110,13 +109,11 @@ public class RestRequestDesktopPanel extends
 
 	}
 
-
 	@Override
 	protected void insertButtons( JXToolBar toolbar )
 	{
 		toolbar.add( addToTestCaseButton );
 	}
-
 
 	private void resetQueryPanelText()
 	{
@@ -190,7 +187,6 @@ public class RestRequestDesktopPanel extends
 
 
 			toolbar.addWithOnlyMinimumHeight( queryPanel );
-			showdialog( getRequest().getResource() );
 		}
 	}
 
@@ -205,7 +201,7 @@ public class RestRequestDesktopPanel extends
 	private class ResourceChangeListener implements PropertyChangeListener
 	{
 
-		@Override
+	@Override
 		public void propertyChange( PropertyChangeEvent evt )
 		{
 			rebuildResourcePanelText();
@@ -222,7 +218,7 @@ public class RestRequestDesktopPanel extends
 	private void showdialog( final RestResource resource )
 	{
 		JDialog dialog = new JDialog( UISupport.getMainFrame(), "resource path" );
-		final JPanel panel = new JPanel( new GridLayout( 0, 1 ) );
+		final JPanel panel = new JPanel( new BorderLayout() );
 
 		final Map<RestResource, JTextField> map = new HashMap<RestResource, JTextField>();
 		RestResource r = resource;
@@ -232,17 +228,30 @@ public class RestRequestDesktopPanel extends
 			resources.add( r );
 			r = r.getParentResource();
 		}
-
 		Collections.reverse( resources );
+
+		Box centralen = Box.createVerticalBox();
+		int indention = 0;
 		for( RestResource restResource : resources )
 		{
+			Box box = Box.createHorizontalBox();
+			if( indention > 0 )
+			{
+				box.add( Box.createHorizontalStrut( indention ) );
+				box.add( new JLabel( "Pil" ) );
+			}
 			JTextField textField = new JTextField( restResource.getPath() );
-			panel.add( textField );
+			box.add( textField );
+			box.add( new Box.Filler( new Dimension( 0, 0 ), new Dimension( 1000, 1000 ), new Dimension( 1000, 1000 ) ) );
+			box.add( new JLabel( "Apa" ) );
+			centralen.add( box );
 			map.put( restResource, textField );
+			indention += 50;
 		}
+		panel.add( centralen, BorderLayout.CENTER );
 
 		JButton okButton = new JButton( "OK" );
-		panel.add( okButton );
+		panel.add( okButton, BorderLayout.SOUTH );
 		okButton.addActionListener( new ActionListener()
 		{
 			@Override
