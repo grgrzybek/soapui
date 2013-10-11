@@ -21,6 +21,7 @@ import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequestInterface;
 import com.eviware.soapui.support.UISupport;
 import com.eviware.soapui.support.action.swing.SwingActionDelegate;
 import com.eviware.soapui.support.components.JXToolBar;
+import com.jgoodies.forms.factories.ButtonBarFactory;
 
 import javax.swing.*;
 import javax.swing.event.DocumentListener;
@@ -217,7 +218,8 @@ public class RestRequestDesktopPanel extends
 
 	private void showdialog( final RestResource resource )
 	{
-		JDialog dialog = new JDialog( UISupport.getMainFrame(), "resource path" );
+		final JDialog dialog = new JDialog( UISupport.getMainFrame(), "resource path" );
+		dialog.setResizable( false );
 		final JPanel panel = new JPanel( new BorderLayout() );
 
 		final Map<RestResource, JTextField> map = new HashMap<RestResource, JTextField>();
@@ -231,27 +233,50 @@ public class RestRequestDesktopPanel extends
 		Collections.reverse( resources );
 
 		Box centralen = Box.createVerticalBox();
-		int indention = 0;
+
+		int indention = -32;
 		for( RestResource restResource : resources )
 		{
 			Box box = Box.createHorizontalBox();
-			if( indention > 0 )
+			box.setAlignmentX( 0 );
+			box.setAlignmentY( 0 );
+			if(indention > 0)
+			box.add( Box.createHorizontalStrut( indention ) );
+			if (indention >= 0)
 			{
-				box.add( Box.createHorizontalStrut( indention ) );
-				box.add( new JLabel( "Pil" ) );
+//				box.add( new JLabel( "∟" ) );
+				box.add(new JLabel( UISupport.createImageIcon( "/hake.png" )));
 			}
 			JTextField textField = new JTextField( restResource.getPath() );
-			box.add( textField );
-			box.add( new Box.Filler( new Dimension( 0, 0 ), new Dimension( 1000, 1000 ), new Dimension( 1000, 1000 ) ) );
-			box.add( new JLabel( "Apa" ) );
+			textField.setMaximumSize( new Dimension(150, ( int )textField.getPreferredSize().getHeight() ) );
+			textField.setPreferredSize( new Dimension(150, ( int )textField.getPreferredSize().getHeight() ) );
+//			box.setBorder(BorderFactory.createCompoundBorder(
+//					box.getBorder(),
+//					BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+			Box boxBox = Box.createVerticalBox();
+			boxBox.add( Box.createVerticalGlue() );
+			boxBox.add( textField );
+			box.add( boxBox );
 			centralen.add( box );
 			map.put( restResource, textField );
-			indention += 50;
+			indention += 32;
 		}
 		panel.add( centralen, BorderLayout.CENTER );
 
+		Box buttonBox = Box.createHorizontalBox();
+
 		JButton okButton = new JButton( "OK" );
-		panel.add( okButton, BorderLayout.SOUTH );
+		JButton cancelButton = new JButton( "Cancel" );
+		buttonBox.add( okButton );
+		buttonBox.add( cancelButton );
+		//panel.add( buttonBox, BorderLayout.SOUTH );
+		buttonBox.setBorder(BorderFactory.createCompoundBorder(
+				buttonBox.getBorder(),
+				BorderFactory.createEmptyBorder(10, 10, 10, 10)));
+
+		JPanel buttonBar = ButtonBarFactory.buildRightAlignedBar( okButton, cancelButton );
+
+		panel.add( buttonBar, BorderLayout.SOUTH );
 		okButton.addActionListener( new ActionListener()
 		{
 			@Override
@@ -261,11 +286,21 @@ public class RestRequestDesktopPanel extends
 				{
 					JTextField jTextField = map.get( restResource );
 					restResource.setPath( jTextField.getText() );
+					dialog.setVisible( false );
 				}
 			}
 		} );
+		cancelButton.addActionListener( new ActionListener()
+		{
+			@Override
+			public void actionPerformed( ActionEvent e )
+			{
+				dialog.setVisible( false );
+			}
+		} );
 		dialog.getRootPane().setContentPane( panel );
-		dialog.setSize( 400, 300 );
+		dialog.pack();
+//		dialog.setSize( 400, 300 );
 
 		UISupport.showDialog( dialog );
 	}
