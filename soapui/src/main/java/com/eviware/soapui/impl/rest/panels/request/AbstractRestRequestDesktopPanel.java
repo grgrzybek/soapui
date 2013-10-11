@@ -12,9 +12,7 @@
 
 package com.eviware.soapui.impl.rest.panels.request;
 
-import com.eviware.soapui.impl.rest.RestMethod;
 import com.eviware.soapui.impl.rest.RestRequestInterface;
-import com.eviware.soapui.impl.rest.RestResource;
 import com.eviware.soapui.impl.rest.actions.request.AddRestRequestToTestCaseAction;
 import com.eviware.soapui.impl.rest.support.RestParamProperty;
 import com.eviware.soapui.impl.rest.support.RestParamsPropertyHolder;
@@ -22,7 +20,6 @@ import com.eviware.soapui.impl.rest.support.XmlBeansRestParamsTestPropertyHolder
 import com.eviware.soapui.impl.support.actions.ShowOnlineHelpAction;
 import com.eviware.soapui.impl.support.panels.AbstractHttpXmlRequestDesktopPanel;
 import com.eviware.soapui.impl.wsdl.WsdlSubmitContext;
-import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequestInterface;
 import com.eviware.soapui.model.ModelItem;
 import com.eviware.soapui.model.iface.Interface;
 import com.eviware.soapui.model.iface.Request.SubmitException;
@@ -65,6 +62,7 @@ public abstract class AbstractRestRequestDesktopPanel<T extends ModelItem, T2 ex
 		{
 			( ( RestParamProperty )param ).addPropertyChangeListener( restParamPropertyChangeListener );
 		}
+
 	}
 
 	private void addPropertyChangeListenerToResource( T2 requestItem )
@@ -188,6 +186,7 @@ public abstract class AbstractRestRequestDesktopPanel<T extends ModelItem, T2 ex
 
 	//Hooks for subclasses
 	protected abstract void addTopToolbarComponents( JXToolBar toolBar );
+
 	protected abstract void addBottomToolbar( JPanel panel );
 
 
@@ -341,5 +340,6 @@ public abstract class AbstractRestRequestDesktopPanel<T extends ModelItem, T2 ex
 			}
 		}
 	}
+
 
 }

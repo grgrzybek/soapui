@@ -12,14 +12,10 @@
 
 package com.eviware.soapui.impl.rest.panels.request;
 
-import javax.swing.*;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.Document;
-
 import com.eviware.soapui.impl.rest.RestRequestInterface;
+import com.eviware.soapui.impl.rest.RestResource;
 import com.eviware.soapui.impl.rest.actions.request.AddRestRequestToTestCaseAction;
 import com.eviware.soapui.impl.rest.support.RestUtils;
-import com.eviware.soapui.impl.support.actions.ShowOnlineHelpAction;
 import com.eviware.soapui.impl.wsdl.support.HelpUrls;
 import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequestInterface;
 import com.eviware.soapui.support.DocumentListenerAdapter;
@@ -27,7 +23,19 @@ import com.eviware.soapui.support.UISupport;
 import com.eviware.soapui.support.action.swing.SwingActionDelegate;
 import com.eviware.soapui.support.components.JXToolBar;
 
+import javax.swing.*;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.Document;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
 
 public class RestRequestDesktopPanel extends
 		AbstractRestRequestDesktopPanel<RestRequestInterface, RestRequestInterface>
@@ -35,10 +43,13 @@ public class RestRequestDesktopPanel extends
 	private JButton addToTestCaseButton;
 	protected TextPanelWithTopLabel resourcePanel;
 	protected TextPanelWithTopLabel queryPanel;
+	private final ResourceChangeListener resourceChangeListener;
 
 	public RestRequestDesktopPanel( RestRequestInterface modelItem )
 	{
 		super( modelItem, modelItem );
+		resourceChangeListener = new ResourceChangeListener();
+		modelItem.getResource().addPropertyChangeListener( RestResource.PATH_PROPERTY, resourceChangeListener );
 	}
 
 	@Override
@@ -50,12 +61,13 @@ public class RestRequestDesktopPanel extends
 			@Override
 			public void update( Document document )
 			{
-				getRequest().getResource().setPath( resourcePanel.getText() );
+				//getRequest().getResource().setPath( resourcePanel.getText() );
 			}
 		} );
 
 		String query = RestUtils.getQueryParamsString( getRequest().getParams(), getRequest() );
 		queryPanel = new TextPanelWithTopLabel( "Query", query, false );
+
 	}
 
 	@Override
@@ -97,7 +109,7 @@ public class RestRequestDesktopPanel extends
 		resetQueryPanelText();
 
 	}
-	
+
 
 	@Override
 	protected void insertButtons( JXToolBar toolbar )
@@ -108,7 +120,7 @@ public class RestRequestDesktopPanel extends
 
 	private void resetQueryPanelText()
 	{
-			queryPanel.setText( RestUtils.getQueryParamsString( getRequest().getParams(), getRequest() ) );
+		queryPanel.setText( RestUtils.getQueryParamsString( getRequest().getParams(), getRequest() ) );
 
 	}
 
@@ -118,7 +130,6 @@ public class RestRequestDesktopPanel extends
 
 		JLabel textLabel;
 		JTextField textField;
-
 
 
 		TextPanelWithTopLabel( String label, String text )
@@ -179,7 +190,75 @@ public class RestRequestDesktopPanel extends
 
 
 			toolbar.addWithOnlyMinimumHeight( queryPanel );
+			showdialog( getRequest().getResource() );
 		}
+	}
+
+	protected void rebuildResourcePanelText()
+	{
+		if( resourcePanel != null )
+		{
+			resourcePanel.setText( getRequest().getResource().getFullPath() );
+		}
+	}
+
+	private class ResourceChangeListener implements PropertyChangeListener
+	{
+
+		@Override
+		public void propertyChange( PropertyChangeEvent evt )
+		{
+			rebuildResourcePanelText();
+		}
+	}
+
+	@Override
+	protected boolean release()
+	{
+		getRequest().getResource().removePropertyChangeListener( resourceChangeListener );
+		return super.release();
+	}
+
+	private void showdialog( final RestResource resource )
+	{
+		JDialog dialog = new JDialog( UISupport.getMainFrame(), "resource path" );
+		final JPanel panel = new JPanel( new GridLayout( 0, 1 ) );
+
+		final Map<RestResource, JTextField> map = new HashMap<RestResource, JTextField>();
+		RestResource r = resource;
+		final List<RestResource> resources = new ArrayList<RestResource>();
+		while( r != null )
+		{
+			resources.add( r );
+			r = r.getParentResource();
+		}
+
+		Collections.reverse( resources );
+		for( RestResource restResource : resources )
+		{
+			JTextField textField = new JTextField( restResource.getPath() );
+			panel.add( textField );
+			map.put( restResource, textField );
+		}
+
+		JButton okButton = new JButton( "OK" );
+		panel.add( okButton );
+		okButton.addActionListener( new ActionListener()
+		{
+			@Override
+			public void actionPerformed( ActionEvent e )
+			{
+				for( RestResource restResource : resources )
+				{
+					JTextField jTextField = map.get( restResource );
+					restResource.setPath( jTextField.getText() );
+				}
+			}
+		} );
+		dialog.getRootPane().setContentPane( panel );
+		dialog.setSize( 400, 300 );
+
+		UISupport.showDialog( dialog );
 	}
 
 }

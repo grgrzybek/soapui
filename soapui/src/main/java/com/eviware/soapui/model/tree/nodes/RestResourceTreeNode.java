@@ -19,6 +19,7 @@ import java.util.List;
 
 import com.eviware.soapui.impl.rest.RestMethod;
 import com.eviware.soapui.impl.rest.RestResource;
+import com.eviware.soapui.model.ModelItem;
 import com.eviware.soapui.model.iface.Request;
 import com.eviware.soapui.model.tree.AbstractModelItemTreeNode;
 import com.eviware.soapui.model.tree.SoapUITreeModel;
@@ -43,6 +44,10 @@ public class RestResourceTreeNode extends AbstractModelItemTreeNode<RestResource
 	{
 		super( restResource, restResource.getParent(), treeModel );
 		this.restResource = restResource;
+
+
+		restResource.addPropertyChangeListener( RestResource.PATH_PROPERTY, this );
+
 		treeModel.mapModelItem( this );
 
 		for( int c = 0; c < restResource.getChildResourceCount(); c++ )
@@ -114,6 +119,7 @@ public class RestResourceTreeNode extends AbstractModelItemTreeNode<RestResource
 		{
 			resource.release();
 		}
+		restResource.removePropertyChangeListener( this );
 	}
 
 	public void addChildResource( RestResource restResource )
@@ -183,6 +189,10 @@ public class RestResourceTreeNode extends AbstractModelItemTreeNode<RestResource
 			{
 				methodRemoved( ( RestMethod )evt.getOldValue() );
 			}
+		}
+		else if( evt.getPropertyName().equals( RestResource.PATH_PROPERTY  ) )
+		{
+			getTreeModel().notifyNodeChanged( this );
 		}
 	}
 }
