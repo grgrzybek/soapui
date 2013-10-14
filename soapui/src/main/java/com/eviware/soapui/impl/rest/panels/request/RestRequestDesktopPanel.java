@@ -24,15 +24,14 @@ import com.eviware.soapui.support.components.JXToolBar;
 import com.jgoodies.forms.factories.ButtonBarFactory;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RestRequestDesktopPanel extends
@@ -216,13 +215,46 @@ public class RestRequestDesktopPanel extends
 		return super.release();
 	}
 
+	private class RestResourceTextField
+	{
+		private RestResource restResource;
+		private JTextField textField;
+		private Integer affectedRequestCount;
+
+		private RestResourceTextField( RestResource restResource )
+		{
+			this.restResource = restResource;
+			textField = new JTextField( restResource.getPath() );
+			textField.setMaximumSize( new Dimension( 150, ( int )textField.getPreferredSize().getHeight() ) );
+			textField.setPreferredSize( new Dimension( 150, ( int )textField.getPreferredSize().getHeight() ) );
+		}
+
+		public JTextField getTextField()
+		{
+			return textField;
+		}
+
+		public RestResource getRestResource()
+		{
+			return restResource;
+		}
+
+		public int getAffectedRequestCount()
+		{
+			if( affectedRequestCount == null )
+			{
+				affectedRequestCount = restResource.getAllChildResources().length + 1;
+			}
+			return affectedRequestCount;
+		}
+	}
+
 	private void showdialog( final RestResource resource )
 	{
 		final JDialog dialog = new JDialog( UISupport.getMainFrame(), "Resource Path" );
 		dialog.setResizable( false );
 		final JPanel panel = new JPanel( new BorderLayout() );
 
-		final Map<RestResource, JTextField> map = new HashMap<RestResource, JTextField>();
 		RestResource r = resource;
 		final List<RestResource> resources = new ArrayList<RestResource>();
 		while( r != null )
@@ -233,14 +265,55 @@ public class RestRequestDesktopPanel extends
 		Collections.reverse( resources );
 
 		Box contentBox = Box.createVerticalBox();
-		contentBox.setBorder( BorderFactory.createCompoundBorder(
-				contentBox.getBorder(),
-				BorderFactory.createEmptyBorder( 0, 0, 10, 0 ) ) );
 
 		int index = 0;
 
 		ImageIcon icon = UISupport.createImageIcon( "/hake.png" );
 
+		final JLabel changeWarningLabel = new JLabel( " " );
+		changeWarningLabel.setBorder( BorderFactory.createCompoundBorder(
+				contentBox.getBorder(),
+				BorderFactory.createEmptyBorder( 10, 0, 10, 0 ) ) );
+		final List<RestResourceTextField> restResourceTextFields = new ArrayList<RestResourceTextField>();
+		DocumentListener pathChangedListener = new DocumentListener()
+		{
+			@Override
+			public void insertUpdate( DocumentEvent e )
+			{
+				update(e);
+			}
+
+			@Override
+			public void removeUpdate( DocumentEvent e )
+			{
+				update(e);
+			}
+
+			@Override
+			public void changedUpdate( DocumentEvent e )
+			{
+				update(e);
+			}
+
+			public void update( DocumentEvent e )
+			{
+				int affectedRequestCount = 0;
+				for( RestResourceTextField restResourceTextField : restResourceTextFields )
+				{
+					if(!restResourceTextField.getTextField().getText().equals( restResourceTextField.getRestResource().getPath() )){
+						affectedRequestCount = restResourceTextField.getAffectedRequestCount();
+						break;
+					}
+				}
+				if(affectedRequestCount > 0){
+					changeWarningLabel.setText( String.format( "<html>Changes will affect: <b>%d</b> request%s</html>",
+							affectedRequestCount, affectedRequestCount>1 ? "s" : "" ) );
+					changeWarningLabel.setVisible( true );
+				} else {
+					changeWarningLabel.setVisible( false );
+				}
+			}
+		};
 		for( RestResource restResource : resources )
 		{
 			Box row = Box.createHorizontalBox();
@@ -255,26 +328,23 @@ public class RestRequestDesktopPanel extends
 				row.add( new JLabel( icon ) );
 			}
 
-			JTextField textField = new JTextField( restResource.getPath() );
-			textField.setMaximumSize( new Dimension( 150, ( int )textField.getPreferredSize().getHeight() ) );
-			textField.setPreferredSize( new Dimension( 150, ( int )textField.getPreferredSize().getHeight() ) );
+			RestResourceTextField restResourceTextField = new RestResourceTextField( restResource );
+			restResourceTextField.getTextField().getDocument().addDocumentListener( pathChangedListener );
+			restResourceTextFields.add( restResourceTextField );
 
 			Box textFieldBox = Box.createVerticalBox();
 			textFieldBox.add( Box.createVerticalGlue() );
-			textFieldBox.add( textField );
+			textFieldBox.add( restResourceTextField.getTextField() );
 			row.add( textFieldBox );
 
 			contentBox.add( row );
-
-			map.put( restResource, textField );
 
 			index++;
 		}
 
 		panel.add( contentBox, BorderLayout.NORTH );
 
-		Label label = new Label( "Här ska det vara lite text" );
-		panel.add( label, BorderLayout.CENTER);
+		panel.add( changeWarningLabel, BorderLayout.CENTER );
 
 		JButton okButton = new JButton( "OK" );
 		JButton cancelButton = new JButton( "Cancel" );
@@ -291,11 +361,9 @@ public class RestRequestDesktopPanel extends
 			@Override
 			public void actionPerformed( ActionEvent e )
 			{
-				for( RestResource restResource : resources )
+				for( RestResourceTextField restResourceTextField : restResourceTextFields )
 				{
-					JTextField jTextField = map.get( restResource );
-					restResource.setPath( jTextField.getText() );
-					dialog.setVisible( false );
+					restResourceTextField.getRestResource().setPath( restResourceTextField.getTextField().getText() );
 				}
 			}
 		} );
