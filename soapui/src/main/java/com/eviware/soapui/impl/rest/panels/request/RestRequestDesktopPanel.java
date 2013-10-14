@@ -202,7 +202,7 @@ public class RestRequestDesktopPanel extends
 	private class ResourceChangeListener implements PropertyChangeListener
 	{
 
-	@Override
+		@Override
 		public void propertyChange( PropertyChangeEvent evt )
 		{
 			rebuildResourcePanelText();
@@ -218,7 +218,7 @@ public class RestRequestDesktopPanel extends
 
 	private void showdialog( final RestResource resource )
 	{
-		final JDialog dialog = new JDialog( UISupport.getMainFrame(), "resource path" );
+		final JDialog dialog = new JDialog( UISupport.getMainFrame(), "Resource Path" );
 		dialog.setResizable( false );
 		final JPanel panel = new JPanel( new BorderLayout() );
 
@@ -232,51 +232,60 @@ public class RestRequestDesktopPanel extends
 		}
 		Collections.reverse( resources );
 
-		Box centralen = Box.createVerticalBox();
+		Box contentBox = Box.createVerticalBox();
+		contentBox.setBorder( BorderFactory.createCompoundBorder(
+				contentBox.getBorder(),
+				BorderFactory.createEmptyBorder( 0, 0, 10, 0 ) ) );
 
-		int indention = -32;
+		int index = 0;
+
+		ImageIcon icon = UISupport.createImageIcon( "/hake.png" );
+
 		for( RestResource restResource : resources )
 		{
-			Box box = Box.createHorizontalBox();
-			box.setAlignmentX( 0 );
-			box.setAlignmentY( 0 );
-			if(indention > 0)
-			box.add( Box.createHorizontalStrut( indention ) );
-			if (indention >= 0)
-			{
-//				box.add( new JLabel( "∟" ) );
-				box.add(new JLabel( UISupport.createImageIcon( "/hake.png" )));
-			}
-			JTextField textField = new JTextField( restResource.getPath() );
-			textField.setMaximumSize( new Dimension(150, ( int )textField.getPreferredSize().getHeight() ) );
-			textField.setPreferredSize( new Dimension(150, ( int )textField.getPreferredSize().getHeight() ) );
-//			box.setBorder(BorderFactory.createCompoundBorder(
-//					box.getBorder(),
-//					BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-			Box boxBox = Box.createVerticalBox();
-			boxBox.add( Box.createVerticalGlue() );
-			boxBox.add( textField );
-			box.add( boxBox );
-			centralen.add( box );
-			map.put( restResource, textField );
-			indention += 32;
-		}
-		panel.add( centralen, BorderLayout.CENTER );
+			Box row = Box.createHorizontalBox();
+			row.setAlignmentX( 0 );
 
-		Box buttonBox = Box.createHorizontalBox();
+			if( index > 1 )
+			{
+				row.add( Box.createHorizontalStrut( ( index - 1 ) * icon.getIconWidth() ) );
+			}
+			if( index >= 1 )
+			{
+				row.add( new JLabel( icon ) );
+			}
+
+			JTextField textField = new JTextField( restResource.getPath() );
+			textField.setMaximumSize( new Dimension( 150, ( int )textField.getPreferredSize().getHeight() ) );
+			textField.setPreferredSize( new Dimension( 150, ( int )textField.getPreferredSize().getHeight() ) );
+
+			Box textFieldBox = Box.createVerticalBox();
+			textFieldBox.add( Box.createVerticalGlue() );
+			textFieldBox.add( textField );
+			row.add( textFieldBox );
+
+			contentBox.add( row );
+
+			map.put( restResource, textField );
+
+			index++;
+		}
+
+		panel.add( contentBox, BorderLayout.NORTH );
+
+		Label label = new Label( "Här ska det vara lite text" );
+		panel.add( label, BorderLayout.CENTER);
 
 		JButton okButton = new JButton( "OK" );
 		JButton cancelButton = new JButton( "Cancel" );
-		buttonBox.add( okButton );
-		buttonBox.add( cancelButton );
-		//panel.add( buttonBox, BorderLayout.SOUTH );
-		buttonBox.setBorder(BorderFactory.createCompoundBorder(
-				buttonBox.getBorder(),
-				BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
 		JPanel buttonBar = ButtonBarFactory.buildRightAlignedBar( okButton, cancelButton );
 
 		panel.add( buttonBar, BorderLayout.SOUTH );
+		panel.setBorder( BorderFactory.createCompoundBorder(
+				panel.getBorder(),
+				BorderFactory.createEmptyBorder( 10, 10, 10, 10 ) ) );
+
 		okButton.addActionListener( new ActionListener()
 		{
 			@Override
@@ -300,8 +309,6 @@ public class RestRequestDesktopPanel extends
 		} );
 		dialog.getRootPane().setContentPane( panel );
 		dialog.pack();
-//		dialog.setSize( 400, 300 );
-
 		UISupport.showDialog( dialog );
 	}
 
