@@ -211,7 +211,7 @@ public class RestRequestDesktopPanel extends
 	@Override
 	protected boolean release()
 	{
-		getRequest().getResource().removePropertyChangeListener( resourceChangeListener );
+		getRequest().getResource().removePropertyChangeListener( RestResource.PATH_PROPERTY, resourceChangeListener );
 		return super.release();
 	}
 
