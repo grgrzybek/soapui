@@ -113,6 +113,7 @@ public class RestResourceDesktopPanel extends ModelItemDesktopPanel<RestResource
 									"Add Parameter", "" );
 							if( value != null )
 								property.setDefaultValue( value );
+								property.setValue( value );
 						}
 					}
 				}
