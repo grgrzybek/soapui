@@ -1827,7 +1827,7 @@ else return "";</string>
                         <string>64</string>
                       </void>
                       <void property="vmOptions">
-                        <array class="java.lang.String" length="11">
+                        <array class="java.lang.String" length="10">
                           <void index="0">
                             <string>-Xms128m</string>
                           </void>
@@ -1857,9 +1857,6 @@ else return "";</string>
                           </void>
                           <void index="9">
                             <string>-Djava.util.Arrays.useLegacyMergeSort=true</string>
-                          </void>
-                          <void index="10">
-                            <string>-Dfile.encoding=UTF8</string>
                           </void>
                         </array>
                       </void>
