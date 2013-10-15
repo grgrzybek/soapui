@@ -9,7 +9,7 @@
  *  even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
  *  See the GNU Lesser General Public License for more details at gnu.org.
  */
-package com.eviware.soapui.impl.rest.panels.request;
+package com.eviware.soapui.impl.rest.panels.component;
 
 import com.eviware.soapui.impl.rest.RestResource;
 import com.eviware.soapui.support.DocumentListenerAdapter;
@@ -40,6 +40,7 @@ public class RestResourceEditor extends JTextField
 
 	public RestResourceEditor( RestResource restResource, MutableBoolean updating )
 	{
+		super( restResource.getFullPath() );
 		this.restResource = restResource;
 		this.updating = updating;
 		if( isResourceLonely( restResource ) )
