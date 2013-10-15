@@ -12,6 +12,9 @@
 package com.eviware.soapui.impl.rest.panels.component;
 
 import com.eviware.soapui.impl.rest.RestResource;
+import com.eviware.soapui.impl.rest.support.RestParamProperty;
+import com.eviware.soapui.impl.rest.support.RestParamsPropertyHolder;
+import com.eviware.soapui.impl.rest.support.RestUtils;
 import com.eviware.soapui.support.DocumentListenerAdapter;
 import com.eviware.soapui.support.UISupport;
 import com.jgoodies.forms.factories.ButtonBarFactory;
@@ -21,10 +24,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,17 +35,29 @@ import java.util.List;
  */
 public class RestResourceEditor extends JTextField
 {
-	private RestResource restResource;
+	private RestResource editingRestResource;
 	private MutableBoolean updating;
 
-	public RestResourceEditor( RestResource restResource, MutableBoolean updating )
+	public RestResourceEditor( RestResource editingRestResource, MutableBoolean updating )
 	{
-		super( restResource.getFullPath() );
-		this.restResource = restResource;
+		super( editingRestResource.getFullPath() );
+		this.editingRestResource = editingRestResource;
 		this.updating = updating;
-		if( isResourceLonely( restResource ) )
+		if( isResourceLonely( editingRestResource ) )
 		{
 			getDocument().addDocumentListener( new LonelyDocumentListener() );
+			addFocusListener( new FocusListener()
+			{
+				public void focusLost( FocusEvent e )
+				{
+					scanForTemplateParameters();
+				}
+
+				public void focusGained( FocusEvent e )
+				{
+				}
+			} );
+
 		}
 		else
 		{
@@ -57,9 +69,47 @@ public class RestResourceEditor extends JTextField
 				{
 					setEditable( false );
 					showDialog();
+					setEditable( true );
 				}
 			} );
 		}
+	}
+
+	private void scanForTemplateParameters()
+	{
+		for( RestResource restResource : getRestResources() )
+		{
+			for( String p : RestUtils.extractTemplateParams( restResource.getPath() ) )
+			{
+				if( !resourceOrParentHasProperty( restResource, p ) )
+				{
+					if( UISupport.confirm( "Add template parameter [" + p + "] to resource?", "Add Parameter" ) )
+					{
+						RestParamProperty property = restResource.addProperty( p );
+						property.setStyle( RestParamsPropertyHolder.ParameterStyle.TEMPLATE );
+						String value = UISupport.prompt( "Specify default value for parameter [" + p + "]",
+								"Add Parameter", "" );
+						if( value != null )
+						{
+							property.setDefaultValue( value );
+							property.setValue( value );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private boolean resourceOrParentHasProperty( RestResource restResource, String name )
+	{
+		for( RestResource r = restResource; r != null; r = r.getParentResource() )
+		{
+			if( r.hasProperty( name ) )
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean isResourceLonely( RestResource restResource )
@@ -72,8 +122,6 @@ public class RestResourceEditor extends JTextField
 		final JDialog dialog = new JDialog( UISupport.getMainFrame(), "Resource Path", true );
 		dialog.setResizable( false );
 		final JPanel panel = new JPanel( new BorderLayout() );
-
-		final java.util.List<RestResource> resources = getRestResources();
 
 		Box contentBox = Box.createVerticalBox();
 
@@ -112,7 +160,7 @@ public class RestResourceEditor extends JTextField
 				}
 			}
 		};
-		for( RestResource restResource : resources )
+		for( RestResource restResource : getRestResources() )
 		{
 			Box row = Box.createHorizontalBox();
 			row.setAlignmentX( 0 );
@@ -154,15 +202,6 @@ public class RestResourceEditor extends JTextField
 				panel.getBorder(),
 				BorderFactory.createEmptyBorder( 10, 10, 10, 10 ) ) );
 
-		final ActionListener closeDialog = new ActionListener()
-		{
-			@Override
-			public void actionPerformed( ActionEvent e )
-			{
-				dialog.setVisible( false );
-				setEditable( true );
-			}
-		};
 		okButton.addActionListener( new ActionListener()
 		{
 			@Override
@@ -172,10 +211,18 @@ public class RestResourceEditor extends JTextField
 				{
 					restSubResourceTextField.getRestResource().setPath( restSubResourceTextField.getTextField().getText() );
 				}
-				closeDialog.actionPerformed( e );
+				dialog.setVisible( false );
+				scanForTemplateParameters();
 			}
 		} );
-		cancelButton.addActionListener( closeDialog );
+		cancelButton.addActionListener( new ActionListener()
+		{
+			@Override
+			public void actionPerformed( ActionEvent e )
+			{
+				dialog.setVisible( false );
+			}
+		} );
 		dialog.getRootPane().setContentPane( panel );
 		dialog.pack();
 		UISupport.showDialog( dialog );
@@ -183,12 +230,10 @@ public class RestResourceEditor extends JTextField
 
 	private List<RestResource> getRestResources()
 	{
-		RestResource r = restResource;
 		final List<RestResource> resources = new ArrayList<RestResource>();
-		while( r != null )
+		for( RestResource r = editingRestResource; r != null; r = r.getParentResource() )
 		{
 			resources.add( r );
-			r = r.getParentResource();
 		}
 		Collections.reverse( resources );
 		return resources;
@@ -238,7 +283,7 @@ public class RestResourceEditor extends JTextField
 				return;
 			}
 			updating.setValue( true );
-			restResource.setPath( getText( document ) );
+			editingRestResource.setPath( getText( document ) );
 			updating.setValue( false );
 		}
 	}

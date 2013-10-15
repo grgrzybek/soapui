@@ -94,35 +94,7 @@ public class RestResourceDesktopPanel extends ModelItemDesktopPanel<RestResource
 
 		toolbar.addSeparator();
 
-		pathTextField = new RestResourceEditor( getModelItem(), updating);
-
-
-		pathTextField.addFocusListener( new FocusListener()
-		{
-			public void focusLost( FocusEvent e )
-			{
-				for( String p : RestUtils.extractTemplateParams( getModelItem().getPath() ) )
-				{
-					if( !getModelItem().hasProperty( p ) )
-					{
-						if( UISupport.confirm( "Add template parameter [" + p + "] to resource?", "Add Parameter" ) )
-						{
-							RestParamProperty property = getModelItem().addProperty( p );
-							property.setStyle( ParameterStyle.TEMPLATE );
-							String value = UISupport.prompt( "Specify default value for parameter [" + p + "]",
-									"Add Parameter", "" );
-							if( value != null )
-								property.setDefaultValue( value );
-								property.setValue( value );
-						}
-					}
-				}
-			}
-
-			public void focusGained( FocusEvent e )
-			{
-			}
-		} );
+		pathTextField = new RestResourceEditor( getModelItem(), updating );
 
 		toolbar.addFixed( new JLabel( "Resource Path" ) );
 		toolbar.addSeparator( new Dimension( 3, 3 ) );
